@@ -1,0 +1,23 @@
+# 環境変数 (APIキーを含む - 絶対にコミットしない)
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# 出力ファイル
+output/
+
+# ログ
+logs/*.log
+
+# OS
+.DS_Store
+Thumbs.db
