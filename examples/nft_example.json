@@ -1,0 +1,17 @@
+{
+  "_comment": "NFT 購入サンプルトランザクション (OpenSea Seaport V1.5 経由)",
+  "hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
+  "timeStamp": "1700000100",
+  "from": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  "to": "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
+  "value": "1000000000000000000",
+  "input": "0x1234",
+  "functionName": "fulfillBasicOrder",
+  "gasUsed": "200000",
+  "gasPrice": "20000000000",
+  "isError": "0",
+  "_source": "normal",
+  "_expected_tx_type": "NFT_PURCHASE",
+  "_marketplace": "OpenSea (Seaport 1.5)",
+  "_note": "to アドレスが OpenSea Seaport 1.5 → NFT_PURCHASE 判定"
+}

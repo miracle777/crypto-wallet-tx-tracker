@@ -24,6 +24,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from exporters.csv_exporter import export_to_csv
+from exporters.cryptact_exporter import export_to_cryptact
 
 # ──────────────────────────────────────────────────────────────
 # ロギング設定
@@ -96,6 +97,11 @@ def main() -> None:
         action="store_true",
         help="サンプルアドレスで動作テストを行います (APIキー必要)",
     )
+    parser.add_argument(
+        "--no-cryptact",
+        action="store_true",
+        help="Cryptact 形式 CSV の出力をスキップします",
+    )
     args = parser.parse_args()
 
     # ── 環境変数ロード ─────────────────────────────────────────
@@ -163,11 +169,19 @@ def main() -> None:
     print(f"\n📄 CSV を出力中... (合計 {len(all_records)} 件)")
     csv_path = export_to_csv(all_records)
 
+    # ── Cryptact CSV 出力 ──────────────────────────────────────
+    cryptact_path = None
+    if not args.no_cryptact:
+        print("⏳ Cryptact CSV を出力中...")
+        cryptact_path = export_to_cryptact(all_records)
+
     # ── 完了メッセージ ─────────────────────────────────────────
     print(f"\n{DIVIDER}")
     print("  ✅ 完了！")
     print(f"\n{'chr(10)'.join(summary)}")
-    print(f"\n  📁 出力ファイル : {csv_path}")
+    print(f"\n  📁 通常 CSV         : {csv_path}")
+    if cryptact_path:
+        print(f"  📁 Cryptact CSV   : {cryptact_path}")
     print(f"  📊 合計取引数   : {len(all_records)} 件")
     print(f"{DIVIDER}\n")
 

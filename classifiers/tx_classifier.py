@@ -7,16 +7,26 @@ EVM / Bitcoin トランザクションの取引タイプ分類モジュール。
 取引タイプ一覧:
   SEND               - 通常送金 (OUT)
   RECEIVE            - 通常受取 (IN)
-  SWAP               - DEXでのスワップ
+  SWAP               - DEXでのスワップ (レガシー互換)
+  DEX_SWAP           - DEXでのスワップ (拡張判定)
   STAKE              - ステーキング入金
   UNSTAKE            - ステーキング出金
   REWARD             - ステーキング報酬・ボーナス受取
   ADD_LIQUIDITY      - 流動性追加
   REMOVE_LIQUIDITY   - 流動性削除
-  NFT_PURCHASE       - NFT購入
+  NFT_PURCHASE       - NFT購入 (マーケットプレイス経由)
+  NFT_TRANSFER       - NFT直接転送
   AIRDROP            - エアドロップ受取
+  SELF_TRANSFER      - 自己ウォレット間送金 (税務対象外)
   CONTRACT_INTERACTION - その他コントラクト操作 (approveなど)
   UNKNOWN            - 不明
+
+判定処理順序:
+  1. SELF_TRANSFER   - 自己ウォレット判定 (config/wallets.json)
+  2. DEX_SWAP        - DEX SWAP判定 (constants/dex_addresses.py)
+  3. NFT_PURCHASE /  - NFT判定 (constants/nft_marketplaces.py)
+     NFT_TRANSFER
+  4. 既存ロジック    - SEND / RECEIVE / SWAP / STAKE / ...
 """
 
 # ──────────────────────────────────────────────────────────────
@@ -151,6 +161,12 @@ KNOWN_AIRDROP_CONTRACTS: dict[str, str] = {
 }
 
 
+# 新サブモジュールをインポート (循環インポート回避のためここで)
+from classifiers.wallet_classifier import get_wallet_classifier
+from classifiers.dex_classifier import classify_as_dex_swap
+from classifiers.nft_classifier import classify_as_nft
+
+
 def classify_evm_tx(tx: dict, address: str, network: str) -> str:
     """
     EVM トランザクションの取引タイプを分類します。
@@ -173,6 +189,23 @@ def classify_evm_tx(tx: dict, address: str, network: str) -> str:
 
     method_id = input_data[:10].lower() if len(input_data) >= 10 else "0x"
 
+    # ── [1] 自己ウォレット判定 (SELF_TRANSFER) ─────────────────
+    # config/wallets.json が設定されていれば、自己送金を最優先で判定
+    wc = get_wallet_classifier()
+    if wc.is_self_transfer(from_addr, to_addr):
+        return "SELF_TRANSFER"
+
+    # ── [2] DEX SWAP 判定 ──────────────────────────────────────
+    dex_result = classify_as_dex_swap(tx)
+    if dex_result:
+        return dex_result
+
+    # ── [3] NFT 判定 ───────────────────────────────────────────
+    nft_result = classify_as_nft(tx)
+    if nft_result:
+        return nft_result
+
+    # ── [4] 既存ロジック ──────────────────────────────────────
     # ── ERC-20 トークン転送 (tokentx) ─────────────────────────
     if source == "tokentx":
         contract_addr = tx.get("contractAddress", "").lower()

@@ -1,0 +1,17 @@
+{
+  "_comment": "DEX SWAP サンプルトランザクション (Uniswap V2 swapExactTokensForTokens)",
+  "hash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
+  "timeStamp": "1700000000",
+  "from": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  "to": "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+  "value": "0",
+  "input": "0x38ed173900000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000000a0",
+  "functionName": "swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)",
+  "gasUsed": "150000",
+  "gasPrice": "20000000000",
+  "isError": "0",
+  "_source": "normal",
+  "_expected_tx_type": "DEX_SWAP",
+  "_dex": "Uniswap V2 Router",
+  "_note": "to アドレスが Uniswap V2 Router → DEX_SWAP 判定"
+}

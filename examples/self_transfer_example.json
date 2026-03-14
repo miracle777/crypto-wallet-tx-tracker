@@ -1,0 +1,17 @@
+{
+  "_comment": "自己送金サンプルトランザクション (同一ユーザーの別ウォレットへの送金)",
+  "hash": "0xfedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fe",
+  "timeStamp": "1700000200",
+  "from": "0xabc1234567890abcdef1234567890abcdef123456",
+  "to": "0xdef1234567890abcdef1234567890abcdef123456",
+  "value": "500000000000000000",
+  "input": "0x",
+  "functionName": "",
+  "gasUsed": "21000",
+  "gasPrice": "20000000000",
+  "isError": "0",
+  "_source": "normal",
+  "_expected_tx_type": "SELF_TRANSFER",
+  "_note": "config/wallets.json に from と to の両アドレスが登録されている場合 → SELF_TRANSFER 判定",
+  "_setup": "config/wallets.json の addresses に 0xabc... と 0xdef... を追加してテスト"
+}
