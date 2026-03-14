@@ -1,15 +1,11 @@
-```markdown
 # Wallet Tracker
 クリプト取引履歴トラッカー
 
-過去1年間のクリプト取引履歴を取得し、  
-日時付きCSVとして出力するツールです。
+Wallet Tracker は、ウォレットアドレスから過去のクリプト取引履歴を取得し、日時付き CSV として出力するツールです。
 
-複数ネットワークの取引を統合し、  
-Excelや税務ソフトで分析できる形式で出力します。
+複数ブロックチェーンの取引履歴を統合し、Excel や税務ソフト（cryptact 等）で分析できる形式で保存できます。
 
-CLIツールとして動作し、  
-将来的にWebアプリ化を予定しています。
+現在は CLI ツールとして動作します。将来的に Web アプリ版の公開を予定しています。
 
 ---
 
@@ -23,20 +19,37 @@ CLIツールとして動作し、
 | Avalanche | Routescan | 任意（無料枠あり） |
 | Bitcoin | Blockstream API | 不要 |
 
-Baseチェーンは Etherscan API V2 の free tier では制限がある場合があります。  
-その場合は Etherscan の有料APIキーが必要です。
+---
+
+## Etherscan APIについて
+
+Etherscan API V2 は単一の API キーで複数チェーンに対応できます。
+
+対応チェーンの例:
+
+- Ethereum
+- Polygon
+- Arbitrum
+- Optimism
+- Base
+- Scroll
+- Linea
+
+無料プランでは Ethereum / Polygon など主要チェーンを利用できます。Base など一部チェーンは有料 API プランが必要になる場合があります。
+
+そのためこのツールでは **API キーは利用者自身が設定する方式** を採用しています。
 
 ---
 
 ## セットアップ
 
-### 1 Python依存関係のインストール
+### 1. Python依存関係をインストール
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2 APIキー設定
+### 2. APIキー設定
 
 `.env.example` をコピーして `.env` を作成します。
 
@@ -44,7 +57,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-`.env` を編集
+`.env` を編集:
 
 ```env
 ETHERSCAN_API_KEY=xxxxxxxxxxxx
@@ -73,16 +86,15 @@ ROUTESCAN_API_KEY=
 python wallet_tracker.py
 ```
 
-各ネットワークのウォレットアドレスを入力します。  
-不要なネットワークは Enterキー でスキップできます。
+各ネットワークのウォレットアドレスを順番に入力します。不要なネットワークは Enter キーでスキップできます。
 
 ### ドライランテスト
-
-APIキーを設定する前に動作確認できます。
 
 ```bash
 python wallet_tracker.py --dry-run
 ```
+
+API キーを設定する前に動作確認できます。公開ウォレットアドレスを使い、CSV 出力テストを行います。
 
 ---
 
@@ -90,9 +102,11 @@ python wallet_tracker.py --dry-run
 
 `output` フォルダに保存されます。
 
-`transactions_YYYY-MM-DD_HHMMSS.csv`
+```
+transactions_YYYY-MM-DD_HHMMSS.csv
+```
 
-Excelで開ける UTF-8 BOM形式 です。
+Excel で直接開ける UTF-8 BOM 形式です。
 
 ---
 
@@ -116,11 +130,13 @@ Excelで開ける UTF-8 BOM形式 です。
 
 ## cryptact対応
 
-税務ソフト cryptact 用CSVも出力できます。
+税務ソフト cryptact 用 CSV も出力できます。
 
 `output` フォルダ:
 
-`cryptact_YYYY-MM-DD_HHMMSS.csv`
+```
+cryptact_YYYY-MM-DD_HHMMSS.csv
+```
 
 ### 主な対応取引
 
@@ -137,61 +153,42 @@ Excelで開ける UTF-8 BOM形式 です。
 
 ```
 crypto/
-
-wallet_tracker.py
-メインプログラム
-
-fetchers/
-
-evm_fetcher.py
-EVM共通取得
-
-ethereum_fetcher.py
-Ethereum
-
-base_fetcher.py
-Base
-
-polygon_fetcher.py
-Polygon
-
-avalanche_fetcher.py
-Avalanche
-
-bitcoin_fetcher.py
-Bitcoin
-
-classifiers/
-
-tx_classifier.py
-取引分類
-
-exporters/
-
-csv_exporter.py
-独自CSV
-
-cryptact_exporter.py
-cryptact CSV
-
-output/
-生成CSV
-
-logs/
-ログ
-
-requirements.txt
-.env.example
-.gitignore
+├── wallet_tracker.py          # メインプログラム
+├── fetchers/
+│   ├── evm_fetcher.py         # EVM共通処理
+│   ├── ethereum_fetcher.py    # Ethereum
+│   ├── base_fetcher.py        # Base
+│   ├── polygon_fetcher.py     # Polygon
+│   ├── avalanche_fetcher.py   # Avalanche
+│   └── bitcoin_fetcher.py     # Bitcoin
+├── classifiers/
+│   └── tx_classifier.py       # 取引分類
+├── exporters/
+│   ├── csv_exporter.py        # 独自CSV出力
+│   └── cryptact_exporter.py   # cryptact CSV出力
+├── output/                    # 生成CSV
+├── logs/                      # ログ
+├── requirements.txt
+├── .env.example
+└── .gitignore
 ```
 
 ---
 
 ## 注意事項
 
-- Etherscan APIは 1リクエスト最大10000件です。  
-  取引数が多い場合はページネーションで取得します。
-- Etherscan free tier は 約5 requests/sec です。  
-  このツールはレート制限を考慮して待機します。
-- `.env` ファイルは絶対にGitへコミットしないでください。
-```
+- Etherscan API は 1 リクエスト最大 10000 件です。取引数が多い場合は自動ページネーションで取得します。
+- Etherscan Free Plan は約 5 requests/sec です。このツールはレート制限を考慮して待機時間を入れています。
+- `.env` ファイルは絶対に Git にコミットしないでください。`.gitignore` により除外されています。
+
+---
+
+## OSSポリシー
+
+このツールは **利用者自身の API キー** を使用する設計です。
+
+理由:
+
+- API コストをユーザー側で管理できる
+- 無料プラン / 有料プランどちらにも対応できる
+- OSS として公開しやすい
