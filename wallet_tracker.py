@@ -64,7 +64,11 @@ def _prompt_address(network: str, hint: str = "0x...") -> str:
 def _fetch_chain(network: str, address: str, api_key: str) -> list:
     """各チェーンのフェッチャーを呼び出し、取引レコードを返す。"""
     try:
-        if network == "base":
+        if network == "ethereum":
+            from fetchers.ethereum_fetcher import EthereumFetcher
+            return EthereumFetcher(api_key).fetch(address)
+
+        elif network == "base":
             from fetchers.base_fetcher import BaseFetcher
             return BaseFetcher(api_key).fetch(address)
 
@@ -108,6 +112,11 @@ def main() -> None:
         action="store_true",
         help="クリプトリンク汎用フォーマット CSV の出力をスキップします",
     )
+    parser.add_argument(
+        "--exchange",
+        default="",
+        help="クリプトリンク CSV の「取引所」列に表示する名前 (例: MetaMask)",
+    )
     args = parser.parse_args()
 
     # ── 環境変数ロード ─────────────────────────────────────────
@@ -122,10 +131,17 @@ def main() -> None:
     if args.dry_run:
         print("\n  [DRY RUN] サンプルアドレスで実行します\n")
         addresses = DRY_RUN_ADDRESSES
+        exchange = args.exchange
     else:
         print("\n  各ネットワークのウォレットアドレスを入力してください。")
         print("  不要なネットワークは Enter でスキップできます。\n")
+
+        exchange = args.exchange or input(
+            "  取引所 / ウォレット名 (例: MetaMask) [スキップ: Enter]: "
+        ).strip()
+
         addresses = {
+            "ethereum":  _prompt_address("Ethereum",  "0x..."),
             "base":      _prompt_address("Base",      "0x..."),
             "polygon":   _prompt_address("Polygon",   "0x..."),
             "avalanche": _prompt_address("Avalanche", "0x..."),
@@ -150,6 +166,7 @@ def main() -> None:
         or os.getenv("SNOWTRACE_API_KEY", "")     # 旧キー互換
     )
     api_keys = {
+        "ethereum":  etherscan_key,
         "base":      etherscan_key,
         "polygon":   etherscan_key,
         "avalanche": routescan_key,
@@ -196,7 +213,7 @@ def main() -> None:
     cryptolink_path = None
     if not args.no_cryptolink:
         print("⏳ クリプトリンク CSV を出力中...")
-        cryptolink_path = export_to_cryptolink(all_records)
+        cryptolink_path = export_to_cryptolink(all_records, exchange=exchange)
 
     # ── 完了メッセージ ─────────────────────────────────────────
     print(f"\n{DIVIDER}")

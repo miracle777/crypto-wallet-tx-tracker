@@ -104,7 +104,7 @@ def _parse_jst(date_val):
 # メイン関数
 # ──────────────────────────────────────────────────────────────
 
-def export_to_cryptolink(transactions):
+def export_to_cryptolink(transactions, exchange: str = ""):
     """
     wallet_tracker.py が生成した取引レコードのリストを受け取り、
     クリプトリンク汎用フォーマットの CSV を output/ に出力する。
@@ -145,7 +145,7 @@ def export_to_cryptolink(transactions):
         else:
             year = tx_date = tx_time = ""
 
-        network   = str(tx.get("network", ""))
+        network   = exchange if exchange else str(tx.get("network", ""))
         tx_type   = str(tx.get("tx_type", "UNKNOWN"))
         direction = str(tx.get("direction", "OUT"))
         symbol    = str(tx.get("token_symbol", ""))
