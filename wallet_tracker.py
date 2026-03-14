@@ -131,11 +131,17 @@ def main() -> None:
         print("\n❌  アドレスが入力されていません。終了します。")
         sys.exit(1)
 
-    # ── APIキー確認 ────────────────────────────────────────────
+    # ── APIキー確認 ───────────────────────────────────────────
+    # Etherscan API V2: 1つのキーで全EVMチェーンに対応
+    etherscan_key = (
+        os.getenv("ETHERSCAN_API_KEY", "")
+        or os.getenv("BASESCAN_API_KEY", "")      # 後方互換フォールバック
+        or os.getenv("POLYGONSCAN_API_KEY", "")   # 後方互換フォールバック
+    )
     api_keys = {
-        "base":      os.getenv("BASESCAN_API_KEY", ""),
-        "polygon":   os.getenv("POLYGONSCAN_API_KEY", ""),
-        "avalanche": os.getenv("ROUTESCAN_API_KEY", "") or os.getenv("SNOWTRACE_API_KEY", ""),
+        "base":      etherscan_key,
+        "polygon":   etherscan_key,
+        "avalanche": etherscan_key,
         "bitcoin":   "",  # 不要
     }
 

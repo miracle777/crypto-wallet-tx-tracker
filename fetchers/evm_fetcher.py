@@ -2,9 +2,10 @@
 evm_fetcher.py
 ==============
 EVM チェーン向け取引取得の基底クラス。
-Etherscan 互換 API (Basescan / Polygonscan / Routescan) に対応。
+Etherscan API V2 (https://api.etherscan.io/v2/api) に対応。
 
-ページネーション・レート制限・正規化を共通で処理します。
+1つの Etherscan APIキーで全チェーン（Base / Polygon / Avalanche 等）に対応します。
+チェーンは CHAIN_ID クラス変数で識別し、リクエスト時に chainid パラメータとして付与します。
 """
 
 import logging
@@ -26,9 +27,12 @@ class EVMFetcher:
     """EVM チェーン取引取得の基底クラス。"""
 
     NETWORK_NAME: str = ""   # サブクラスで定義
-    API_BASE: str = ""       # サブクラスで定義
+    CHAIN_ID: int = 0        # Etherscan V2 chainid (サブクラスで定義)
     NATIVE_TOKEN: str = ""   # サブクラスで定義
     NATIVE_DECIMALS: int = 18
+
+    # Etherscan API V2 統一エンドポイント
+    API_BASE: str = "https://api.etherscan.io/v2/api"
 
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -43,7 +47,8 @@ class EVMFetcher:
 
     def _request(self, params: dict, retries: int = 3) -> dict:
         """リトライ付き API リクエスト。"""
-        params = {**params, "apikey": self.api_key}
+        # Etherscan V2: chainid を付与
+        params = {**params, "chainid": self.CHAIN_ID, "apikey": self.api_key}
         for attempt in range(retries):
             try:
                 resp = requests.get(self.API_BASE, params=params, timeout=30)

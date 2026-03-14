@@ -1,18 +1,8 @@
 # Wallet Tracker
 クリプト取引履歴トラッカー
 
-<<<<<<< HEAD
 過去1年間のクリプト取引を取得し、日時付きで CSV にまとめるツールです。  
 **DEX SWAP / NFT 取引 / 自己送金** を自動判定し、**Cryptact 向け CSV** も同時出力します。
-=======
-Wallet Tracker は、ウォレットアドレスから過去のクリプト取引履歴を取得し、日時付き CSV として出力するツールです。
-
-複数ブロックチェーンの取引履歴を統合し、Excel や税務ソフト（cryptact 等）で分析できる形式で保存できます。
-
-現在は CLI ツールとして動作します。将来的に Web アプリ版の公開を予定しています。
-
----
->>>>>>> 36a4214713613b1d7a6d4242024da3e3ae66e511
 
 ## 対応ネットワーク
 
@@ -68,20 +58,23 @@ cp .env.example .env
 
 ```env
 ETHERSCAN_API_KEY=xxxxxxxxxxxx
-ROUTESCAN_API_KEY=
 ```
-
-`ROUTESCAN_API_KEY` は空欄でも動作します。
 
 ---
 
 ## APIキー取得方法
 
-### Etherscan API
-`https://etherscan.io/myapikey`
+### Etherscan API V2 (1キーで全チェーン対応)
 
-### Routescan API
-`https://routescan.io/documentation`
+| 手順 | 内容 |
+|---|---|
+| 1 | [https://etherscan.io/register](https://etherscan.io/register) でアカウント登録 |
+| 2 | [https://etherscan.io/apidashboard](https://etherscan.io/apidashboard) にアクセス |
+| 3 | 「**Add**」→ App Name 入力 → 作成 |
+| 4 | 発行されたキーを `.env` の `ETHERSCAN_API_KEY=` に設定 |
+
+無料プラン: 5 calls/sec まで（個人利用には十分）。  
+Bitcoin は APIキー不要（Blockstream.info を使用）。
 
 ---
 
@@ -103,7 +96,6 @@ python wallet_tracker.py
 python wallet_tracker.py --dry-run
 ```
 
-<<<<<<< HEAD
 ### オプション一覧
 
 | オプション | 説明 |
@@ -232,15 +224,6 @@ FAILED 取引は自動的に除外されます。
 ---
 
 ## ファイル構成
-=======
-API キーを設定する前に動作確認できます。公開ウォレットアドレスを使い、CSV 出力テストを行います。
-
----
-
-## 出力CSV
-
-`output` フォルダに保存されます。
->>>>>>> 36a4214713613b1d7a6d4242024da3e3ae66e511
 
 ```
 transactions_YYYY-MM-DD_HHMMSS.csv
@@ -302,7 +285,6 @@ crypto/
 │   ├── avalanche_fetcher.py   # Avalanche
 │   └── bitcoin_fetcher.py     # Bitcoin
 ├── classifiers/
-<<<<<<< HEAD
 │   ├── tx_classifier.py     ← 取引タイプ分類 (メイン)
 │   ├── dex_classifier.py    ← DEX SWAP 判定 [NEW]
 │   ├── nft_classifier.py    ← NFT 取引判定 [NEW]
@@ -321,14 +303,6 @@ crypto/
 │   └── self_transfer_example.json ← 自己送金サンプル [NEW]
 ├── output/                  ← 生成された CSV (自動作成)
 ├── logs/                    ← ログファイル (自動作成)
-=======
-│   └── tx_classifier.py       # 取引分類
-├── exporters/
-│   ├── csv_exporter.py        # 独自CSV出力
-│   └── cryptact_exporter.py   # cryptact CSV出力
-├── output/                    # 生成CSV
-├── logs/                      # ログ
->>>>>>> 36a4214713613b1d7a6d4242024da3e3ae66e511
 ├── requirements.txt
 ├── .env.example
 └── .gitignore
@@ -338,27 +312,9 @@ crypto/
 
 ## 注意事項
 
-<<<<<<< HEAD
 - EVM 系 API は 1 リクエストあたり最大 10,000 件の制限があります。  
   10,000 件を超える場合は自動的にページネーションします。
 - APIキーの無料プランはレート制限があります（通常 5 calls/sec 以内）。  
   このツールは自動的に待機時間を入れています。
 - `.env` ファイルは **絶対に Git にコミットしない** でください（`.gitignore` で除外済み）。
 - `config/wallets.json` の内容は秘密情報ではありませんが、プライバシーに注意してください。
-=======
-- Etherscan API は 1 リクエスト最大 10000 件です。取引数が多い場合は自動ページネーションで取得します。
-- Etherscan Free Plan は約 5 requests/sec です。このツールはレート制限を考慮して待機時間を入れています。
-- `.env` ファイルは絶対に Git にコミットしないでください。`.gitignore` により除外されています。
-
----
-
-## OSSポリシー
-
-このツールは **利用者自身の API キー** を使用する設計です。
-
-理由:
-
-- API コストをユーザー側で管理できる
-- 無料プラン / 有料プランどちらにも対応できる
-- OSS として公開しやすい
->>>>>>> 36a4214713613b1d7a6d4242024da3e3ae66e511
