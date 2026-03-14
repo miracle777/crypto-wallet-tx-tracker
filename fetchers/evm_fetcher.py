@@ -31,7 +31,9 @@ class EVMFetcher:
     NATIVE_TOKEN: str = ""   # サブクラスで定義
     NATIVE_DECIMALS: int = 18
 
-    # Etherscan API V2 統一エンドポイント
+    # Etherscan API V2 統一エンドポイント (デフォルト)
+    # CHAIN_ID > 0 の場合は V2 で使用。
+    # サブクラスで API_BASE をオーバーライドするとその URL を使用（Routescan 等）。
     API_BASE: str = "https://api.etherscan.io/v2/api"
 
     def __init__(self, api_key: str):
@@ -47,8 +49,12 @@ class EVMFetcher:
 
     def _request(self, params: dict, retries: int = 3) -> dict:
         """リトライ付き API リクエスト。"""
-        # Etherscan V2: chainid を付与
-        params = {**params, "chainid": self.CHAIN_ID, "apikey": self.api_key}
+        # CHAIN_ID > 0 の場合のみ Etherscan V2 の chainid パラメータを付与
+        # CHAIN_ID = 0 は Routescan など独自エンドポイントを使うチェーン
+        if self.CHAIN_ID > 0:
+            params = {**params, "chainid": self.CHAIN_ID, "apikey": self.api_key}
+        else:
+            params = {**params, "apikey": self.api_key}
         for attempt in range(retries):
             try:
                 resp = requests.get(self.API_BASE, params=params, timeout=30)

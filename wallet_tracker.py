@@ -132,16 +132,21 @@ def main() -> None:
         sys.exit(1)
 
     # ── APIキー確認 ───────────────────────────────────────────
-    # Etherscan API V2: 1つのキーで全EVMチェーンに対応
+    # Etherscan API V2: 1つのキーで Base / Polygon / Ethereum 等に対応
     etherscan_key = (
         os.getenv("ETHERSCAN_API_KEY", "")
         or os.getenv("BASESCAN_API_KEY", "")      # 後方互換フォールバック
         or os.getenv("POLYGONSCAN_API_KEY", "")   # 後方互換フォールバック
     )
+    # Avalanche は Routescan (非 Etherscan) のため別キー管理
+    routescan_key = (
+        os.getenv("ROUTESCAN_API_KEY", "")
+        or os.getenv("SNOWTRACE_API_KEY", "")     # 旧キー互換
+    )
     api_keys = {
         "base":      etherscan_key,
         "polygon":   etherscan_key,
-        "avalanche": etherscan_key,
+        "avalanche": routescan_key,
         "bitcoin":   "",  # 不要
     }
 
