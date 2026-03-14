@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 
 from exporters.csv_exporter import export_to_csv
 from exporters.cryptact_exporter import export_to_cryptact
+from exporters.cryptolink_exporter import export_to_cryptolink
 
 # ──────────────────────────────────────────────────────────────
 # ロギング設定
@@ -101,6 +102,11 @@ def main() -> None:
         "--no-cryptact",
         action="store_true",
         help="Cryptact 形式 CSV の出力をスキップします",
+    )
+    parser.add_argument(
+        "--no-cryptolink",
+        action="store_true",
+        help="クリプトリンク汎用フォーマット CSV の出力をスキップします",
     )
     args = parser.parse_args()
 
@@ -186,14 +192,22 @@ def main() -> None:
         print("⏳ Cryptact CSV を出力中...")
         cryptact_path = export_to_cryptact(all_records)
 
+    # ── クリプトリンク CSV 出力 ────────────────────────────────
+    cryptolink_path = None
+    if not args.no_cryptolink:
+        print("⏳ クリプトリンク CSV を出力中...")
+        cryptolink_path = export_to_cryptolink(all_records)
+
     # ── 完了メッセージ ─────────────────────────────────────────
     print(f"\n{DIVIDER}")
     print("  ✅ 完了！")
-    print(f"\n{'chr(10)'.join(summary)}")
-    print(f"\n  📁 通常 CSV         : {csv_path}")
+    print(f"\n{chr(10).join(summary)}")
+    print(f"\n  📁 通常 CSV             : {csv_path}")
     if cryptact_path:
-        print(f"  📁 Cryptact CSV   : {cryptact_path}")
-    print(f"  📊 合計取引数   : {len(all_records)} 件")
+        print(f"  📁 Cryptact CSV         : {cryptact_path}")
+    if cryptolink_path:
+        print(f"  📁 クリプトリンク CSV   : {cryptolink_path}")
+    print(f"  📊 合計取引数           : {len(all_records)} 件")
     print(f"{DIVIDER}\n")
 
 
