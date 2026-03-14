@@ -52,12 +52,13 @@ class BitcoinFetcher:
                     time.sleep(2**attempt)
         return None
 
-    def _fetch_txs(self, address: str) -> List[dict]:
+    def _fetch_txs(self, address: str, max_pages: int = 200) -> List[dict]:
         """Blockstream API からトランザクションを全件取得 (最大過去1年分)。"""
         all_txs: List[dict] = []
         last_txid: Optional[str] = None
+        page = 0
 
-        while True:
+        while max_pages is None or page < max_pages:
             if last_txid:
                 url = f"{BLOCKSTREAM_API}/address/{address}/txs/chain/{last_txid}"
             else:
@@ -76,11 +77,19 @@ class BitcoinFetcher:
                 else:
                     found_old = True
 
+            page += 1
+
             if found_old or len(txs) < 25:
                 break
 
             last_txid = txs[-1]["txid"]
             time.sleep(0.5)  # レート制限対策
+
+        if max_pages is not None and page >= max_pages:
+            logger.warning(
+                "[bitcoin] ページ上限 (%d) に達しました。取得件数: %d 件",
+                max_pages, len(all_txs),
+            )
 
         return all_txs
 

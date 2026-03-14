@@ -61,24 +61,29 @@ def _prompt_address(network: str, hint: str = "0x...") -> str:
     return input(f"    アドレス ({hint}) [スキップ: Enter]: ").strip()
 
 
-def _fetch_chain(network: str, address: str, api_key: str) -> list:
+def _fetch_chain(
+    network: str, address: str, api_key: str,
+    max_pages: int = None, page_size: int = None,
+) -> list:
     """各チェーンのフェッチャーを呼び出し、取引レコードを返す。"""
     try:
+        kw = {"max_pages": max_pages, "page_size": page_size}
+
         if network == "ethereum":
             from fetchers.ethereum_fetcher import EthereumFetcher
-            return EthereumFetcher(api_key).fetch(address)
+            return EthereumFetcher(api_key).fetch(address, **kw)
 
         elif network == "base":
             from fetchers.base_fetcher import BaseFetcher
-            return BaseFetcher(api_key).fetch(address)
+            return BaseFetcher(api_key).fetch(address, **kw)
 
         elif network == "polygon":
             from fetchers.polygon_fetcher import PolygonFetcher
-            return PolygonFetcher(api_key).fetch(address)
+            return PolygonFetcher(api_key).fetch(address, **kw)
 
         elif network == "avalanche":
             from fetchers.avalanche_fetcher import AvalancheFetcher
-            return AvalancheFetcher(api_key).fetch(address)
+            return AvalancheFetcher(api_key).fetch(address, **kw)
 
         elif network == "bitcoin":
             from fetchers.bitcoin_fetcher import BitcoinFetcher
@@ -167,7 +172,7 @@ def main() -> None:
     )
     api_keys = {
         "ethereum":  etherscan_key,
-        "base":      etherscan_key,
+        "base":      "",  # Blockscout は APIキー不要
         "polygon":   etherscan_key,
         "avalanche": routescan_key,
         "bitcoin":   "",  # 不要
@@ -179,14 +184,19 @@ def main() -> None:
     summary: list[str] = []
 
     for network, address in active.items():
-        if network != "bitcoin" and not api_keys[network]:
+        if network not in ("bitcoin", "base") and not api_keys[network]:
             msg = f"  ⚠️  {network.upper()}: APIキーが未設定のためスキップします"
             print(msg)
             logger.warning(msg)
             summary.append(f"  {'':2}{network:12} ⚠️  APIキー未設定 (スキップ)")
             continue
 
-        records = _fetch_chain(network, address, api_keys[network])
+        dry_page_size = 10 if args.dry_run else None
+        records = _fetch_chain(
+            network, address, api_keys[network],
+            max_pages=1 if args.dry_run else None,
+            page_size=dry_page_size,
+        )
         all_records.extend(records)
         count = len(records)
         icon = "✅" if count > 0 else "📭"

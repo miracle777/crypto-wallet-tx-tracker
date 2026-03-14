@@ -30,6 +30,9 @@ class EVMFetcher:
     CHAIN_ID: int = 0        # Etherscan V2 chainid (サブクラスで定義)
     NATIVE_TOKEN: str = ""   # サブクラスで定義
     NATIVE_DECIMALS: int = 18
+    PAGE_SIZE: int = 10000   # 1ページあたりの取得件数 (APIによって上限が異なる)
+    REQUEST_TIMEOUT: int = 30  # リクエストタイムアウト秒数
+    RETRIES: int = 3           # リトライ回数
 
     # Etherscan API V2 統一エンドポイント (デフォルト)
     # CHAIN_ID > 0 の場合は V2 で使用。
@@ -47,17 +50,22 @@ class EVMFetcher:
     # 内部ユーティリティ
     # ──────────────────────────────────────────────────────────
 
-    def _request(self, params: dict, retries: int = 3) -> dict:
+    def _request(self, params: dict) -> dict:
         """リトライ付き API リクエスト。"""
         # CHAIN_ID > 0 の場合のみ Etherscan V2 の chainid パラメータを付与
         # CHAIN_ID = 0 は Routescan など独自エンドポイントを使うチェーン
         if self.CHAIN_ID > 0:
-            params = {**params, "chainid": self.CHAIN_ID, "apikey": self.api_key}
-        else:
+            params = {
+                **params, "chainid": self.CHAIN_ID, "apikey": self.api_key
+            }
+        elif self.api_key:
             params = {**params, "apikey": self.api_key}
-        for attempt in range(retries):
+        for attempt in range(self.RETRIES):
             try:
-                resp = requests.get(self.API_BASE, params=params, timeout=30)
+                resp = requests.get(
+                    self.API_BASE, params=params,
+                    timeout=self.REQUEST_TIMEOUT,
+                )
                 resp.raise_for_status()
                 data = resp.json()
 
@@ -65,27 +73,34 @@ class EVMFetcher:
                     return data
                 # "No transactions found" は正常終了とみなす
                 msg = data.get("message", "")
-                if "No " in msg and ("found" in msg or "record" in msg.lower()):
+                if "No " in msg and (
+                    "found" in msg or "record" in msg.lower()
+                ):
                     return {"result": []}
                 logger.warning(
-                    "[%s] API warning: %s", self.NETWORK_NAME, data.get("message")
+                    "[%s] API warning: %s",
+                    self.NETWORK_NAME, data.get("message"),
                 )
                 return {"result": []}
 
             except requests.RequestException as exc:
                 logger.warning(
                     "[%s] Request failed (attempt %d/%d): %s",
-                    self.NETWORK_NAME, attempt + 1, retries, exc,
+                    self.NETWORK_NAME, attempt + 1, self.RETRIES, exc,
                 )
                 if attempt < retries - 1:
                     time.sleep(2**attempt)
 
         return {"result": []}
 
-    def _fetch_paged(self, address: str, action: str) -> List[dict]:
+    def _fetch_paged(
+        self, address: str, action: str,
+        max_pages: int = None, page_size: int = None,
+    ) -> List[dict]:
         """ページネーション付きで全件取得（過去1年分のみ）。"""
         all_results: List[dict] = []
         page = 1
+        offset = page_size if page_size is not None else self.PAGE_SIZE
 
         while True:
             params = {
@@ -95,7 +110,7 @@ class EVMFetcher:
                 "startblock": 0,
                 "endblock": 99999999,
                 "page": page,
-                "offset": 10000,
+                "offset": offset,
                 "sort": "desc",
             }
             data = self._request(params)
@@ -111,7 +126,9 @@ class EVMFetcher:
             # 最古レコードが1年以上前なら打ち切り
             if int(results[-1].get("timeStamp", 0)) < self.one_year_ago:
                 break
-            if len(results) < 10000:
+            if len(results) < offset:
+                break
+            if max_pages is not None and page >= max_pages:
                 break
 
             page += 1
@@ -163,7 +180,9 @@ class EVMFetcher:
             "tx_hash":      tx.get("hash", ""),
             "from":         tx.get("from", ""),
             "to":           tx.get("to", ""),
-            "value":        f"{value:.8f}".rstrip("0").rstrip(".") if value else "0",
+            "value": (
+                f"{value:.8f}".rstrip("0").rstrip(".") if value else "0"
+            ),
             "token_symbol": token_symbol,
             "gas_fee":      gas_fee_str,
             "direction":    direction,
@@ -175,27 +194,38 @@ class EVMFetcher:
     # 公開 API
     # ──────────────────────────────────────────────────────────
 
-    def fetch(self, address: str) -> List[Dict]:
+    def fetch(
+        self, address: str, max_pages: int = None, page_size: int = None
+    ) -> List[Dict]:
         """
         指定アドレスの過去1年分の取引を全種類取得し、
         正規化済みレコードのリストを返します。
+
+        Parameters
+        ----------
+        max_pages : int, optional
+            1アクションあたりの最大ページ数。ドライラン時などに使用。
+        page_size : int, optional
+            1ページあたりの取得件数。省略時は PAGE_SIZE を使用。
         """
         logger.info("[%s] 取引を取得中: %s", self.NETWORK_NAME, address)
         records: List[Dict] = []
 
+        kw = {"max_pages": max_pages, "page_size": page_size}
+
         # 1. 通常トランザクション
         logger.info("[%s] 通常TX を取得中...", self.NETWORK_NAME)
-        for tx in self._fetch_paged(address, "txlist"):
+        for tx in self._fetch_paged(address, "txlist", **kw):
             records.append(self._normalize(tx, address, "normal"))
 
         # 2. ERC-20 トークン転送
         logger.info("[%s] ERC-20 転送を取得中...", self.NETWORK_NAME)
-        for tx in self._fetch_paged(address, "tokentx"):
+        for tx in self._fetch_paged(address, "tokentx", **kw):
             records.append(self._normalize(tx, address, "tokentx"))
 
         # 3. 内部トランザクション
         logger.info("[%s] 内部TX を取得中...", self.NETWORK_NAME)
-        for tx in self._fetch_paged(address, "txlistinternal"):
+        for tx in self._fetch_paged(address, "txlistinternal", **kw):
             records.append(self._normalize(tx, address, "internal"))
 
         # 日付降順ソート
