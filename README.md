@@ -209,8 +209,13 @@ FAILED 取引は自動的に除外されます。
 
 ### 自己ウォレット判定
 
-複数のウォレットを所有している場合、`config/wallets.json` に登録するだけで  
-ウォレット間の送金を自動的に `SELF_TRANSFER` として判定します。
+複数のウォレットを所有している場合、`config/wallets.json.example` をコピーして `config/wallets.json` を作成し、アドレスを登録してください。
+
+```bash
+cp config/wallets.json.example config/wallets.json
+```
+
+`config/wallets.json` の編集（プライバシー保護のため Git 追跡対象外です）:
 
 ```json
 {

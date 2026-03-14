@@ -24,3 +24,6 @@ logs/*.log
 # OS
 .DS_Store
 Thumbs.db
+
+# 設定ファイル (個人アドレスを含むため除外)
+config/wallets.json
