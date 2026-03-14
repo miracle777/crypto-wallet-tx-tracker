@@ -19,57 +19,65 @@ Base と Polygon は Etherscan API V2 の共通APIキーを使用します。
 
 ### 1 Python依存関係のインストール
 
+```bash
 pip install -r requirements.txt
+```
 
 ### 2 APIキーの設定
 
-.env.example をコピーして .env を作成します。
+`.env.example` をコピーして `.env` を作成します。
 
+```bash
 cp .env.example .env
+```
 
-.env を編集
+`.env` を編集
 
+```env
 ETHERSCAN_API_KEY=xxxxxxxxxxxxxxxx
 ROUTESCAN_API_KEY=xxxxxxxxxxxxxxxx
+```
 
-ROUTESCAN_API_KEY は空欄でも動作します（無料枠利用）。
+`ROUTESCAN_API_KEY` は空欄でも動作します（無料枠利用）。
 
 ### APIキーの取得方法
 
-Etherscan API（Base / Polygon）
+#### Etherscan API（Base / Polygon）
 
-https://etherscan.io/myapikey
+`https://etherscan.io/myapikey`
 
-Routescan API（Avalanche）
+#### Routescan API（Avalanche）
 
-https://routescan.io/documentation
+`https://routescan.io/documentation`
 
 ## 使い方
 
 ### 対話形式で実行
 
+```bash
 python wallet_tracker.py
+```
 
-各ネットワークのウォレットアドレスを順番に入力します。
-
+各ネットワークのウォレットアドレスを順番に入力します。  
 不要なネットワークは Enter キーでスキップできます。
 
 ### ドライランテスト
 
 APIキー設定前に動作確認する場合
 
+```bash
 python wallet_tracker.py --dry-run
+```
 
 公開ウォレットアドレスを使用してAPIテストを行います。
 
 ## 出力CSVフォーマット
 
-output フォルダに
+`output` フォルダに
 
-transactions_YYYY-MM-DD_HHMMSS.csv
+`transactions_YYYY-MM-DD_HHMMSS.csv`
 
-として保存されます。
-
+として保存されます。  
 Excelで直接開ける UTF-8 BOM 付きです。
 
 | 列名 | 内容 |
@@ -88,21 +96,22 @@ Excelで直接開ける UTF-8 BOM 付きです。
 
 ### tx_type 一覧
 
-SEND
-RECEIVE
-SWAP
-STAKE
-UNSTAKE
-REWARD
-ADD_LIQUIDITY
-REMOVE_LIQUIDITY
-NFT_PURCHASE
-AIRDROP
-CONTRACT_INTERACTION
-UNKNOWN
+- SEND
+- RECEIVE
+- SWAP
+- STAKE
+- UNSTAKE
+- REWARD
+- ADD_LIQUIDITY
+- REMOVE_LIQUIDITY
+- NFT_PURCHASE
+- AIRDROP
+- CONTRACT_INTERACTION
+- UNKNOWN
 
 ## ファイル構成
 
+```
 cripto/
 
 wallet_tracker.py
@@ -117,9 +126,11 @@ avalanche_fetcher.py
 bitcoin_fetcher.py
 
 classifiers/
+
 tx_classifier.py
 
 exporters/
+
 csv_exporter.py
 
 output/
@@ -133,21 +144,13 @@ requirements.txt
 .env.example
 
 .gitignore
+```
 
 ## 注意事項
 
-EVM API は 1リクエスト最大 10000件の制限があります。
-
-件数が多い場合はページネーションで自動取得します。
-
-Etherscan API の無料プランは
-
-5 requests / sec
-
-程度の制限があります。
-
-このツールはレート制限を考慮し待機時間を入れています。
-
-.env ファイルは 絶対に Git にコミットしないでください。
-
-.gitignore により除外されています.
+- EVM API は 1リクエスト最大 10000件の制限があります。
+  - 件数が多い場合はページネーションで自動取得します。
+- Etherscan API の無料プランは 5 requests / sec 程度の制限があります。
+  - このツールはレート制限を考慮し待機時間を入れています。
+- `.env` ファイルは 絶対に Git にコミットしないでください。
+  - `.gitignore` により除外されています。
