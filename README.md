@@ -1,132 +1,153 @@
-# 🔗 Wallet Tracker (クリプト取引履歴トラッカー)
+# Wallet Tracker (クリプト取引履歴トラッカー)
 
 過去1年間のクリプト取引を取得し、日時付きで CSV にまとめるツールです。
+
+EVMチェーンとBitcoinに対応し、複数ネットワークの取引履歴を統合してCSV出力します。
 
 ## 対応ネットワーク
 
 | ネットワーク | API | APIキー |
 |---|---|---|
-| **Base** | [Basescan](https://basescan.org) | 必要（無料） |
-| **Polygon** | [Polygonscan](https://polygonscan.com) | 必要（無料） |
-| **Avalanche** | [Routescan](https://routescan.io) | 必要（無料） |
-| **Bitcoin** | [Blockstream.info](https://blockstream.info) | **不要** |
+| Base | Etherscan API V2 | 必要（無料） |
+| Polygon | Etherscan API V2 | 必要（無料） |
+| Avalanche | Routescan | 任意（無料枠あり） |
+| Bitcoin | Blockstream.info | 不要 |
+
+Base と Polygon は Etherscan API V2 の共通APIキーを使用します。
 
 ## セットアップ
 
-### 1. Python 依存関係のインストール
+### 1 Python依存関係のインストール
 
-```bash
 pip install -r requirements.txt
-```
 
-### 2. APIキーの設定
+### 2 APIキーの設定
 
-`.env.example` をコピーして `.env` を作成し、各 API キーを設定してください。
+.env.example をコピーして .env を作成します。
 
-```bash
 cp .env.example .env
-```
 
-`.env` ファイルを編集:
-```
-BASESCAN_API_KEY=xxxxxxxxxxxxxxxxxxxx
-POLYGONSCAN_API_KEY=xxxxxxxxxxxxxxxxxxxx
-ROUTESCAN_API_KEY=xxxxxxxxxxxxxxxxxxxx
-```
+.env を編集
 
-#### APIキーの取得方法
+ETHERSCAN_API_KEY=xxxxxxxxxxxxxxxx
+ROUTESCAN_API_KEY=xxxxxxxxxxxxxxxx
 
-| サービス | 取得先URL |
-|---|---|
-| Basescan | https://basescan.org/myapikey |
-| Polygonscan | https://polygonscan.com/myapikey |
-| Routescan | https://routescan.io/ |
+ROUTESCAN_API_KEY は空欄でも動作します（無料枠利用）。
 
-いずれも **無料** で取得できます。
+### APIキーの取得方法
+
+Etherscan API（Base / Polygon）
+
+https://etherscan.io/myapikey
+
+Routescan API（Avalanche）
+
+https://routescan.io/documentation
 
 ## 使い方
 
-### 対話形式で実行（通常）
+### 対話形式で実行
 
-```bash
 python wallet_tracker.py
-```
 
-各ネットワークのウォレットアドレスを順番に入力します。  
-不要なネットワークは **Enter キーを押してスキップ** できます。
+各ネットワークのウォレットアドレスを順番に入力します。
+
+不要なネットワークは Enter キーでスキップできます。
 
 ### ドライランテスト
 
-APIキーを確認する前に動作テストしたい場合:
+APIキー設定前に動作確認する場合
 
-```bash
 python wallet_tracker.py --dry-run
-```
 
-公開済みの有名アドレスを使ってAPIを呼び出し、CSV が生成されることを確認します。
+公開ウォレットアドレスを使用してAPIテストを行います。
 
-## 出力 CSV フォーマット
+## 出力CSVフォーマット
 
-`output/` フォルダに `transactions_YYYY-MM-DD_HHMMSS.csv` として保存されます。  
-Excel で直接開ける UTF-8 BOM 付き形式です。
+output フォルダに
+
+transactions_YYYY-MM-DD_HHMMSS.csv
+
+として保存されます。
+
+Excelで直接開ける UTF-8 BOM 付きです。
 
 | 列名 | 内容 |
 |---|---|
-| `date` | 取引日時 (JST) |
-| `network` | ネットワーク名 |
-| `tx_hash` | トランザクションハッシュ |
-| `from` | 送信元アドレス |
-| `to` | 送信先アドレス |
-| `value` | 送金額 |
-| `token_symbol` | トークンシンボル (ETH, POL, AVAX, BTC など) |
-| `gas_fee` | ガス手数料 (EVM のみ) |
-| `direction` | `IN` (受取) / `OUT` (送金) |
-| `tx_type` | 取引タイプ (下表参照) |
-| `status` | `SUCCESS` / `FAILED` / `PENDING` |
+| date | 取引日時 (JST) |
+| network | ネットワーク名 |
+| tx_hash | トランザクションハッシュ |
+| from | 送信元アドレス |
+| to | 送信先アドレス |
+| value | 送金額 |
+| token_symbol | トークンシンボル |
+| gas_fee | ガス手数料 |
+| direction | IN / OUT |
+| tx_type | 取引タイプ |
+| status | SUCCESS / FAILED / PENDING |
 
 ### tx_type 一覧
 
-| 値 | 説明 |
-|---|---|
-| `SEND` | 通常送金 |
-| `RECEIVE` | 通常受取 |
-| `SWAP` | DEX スワップ |
-| `STAKE` | ステーキング入金 |
-| `UNSTAKE` | ステーキング出金 |
-| `REWARD` | ステーキング報酬・ボーナス |
-| `ADD_LIQUIDITY` | 流動性追加 |
-| `REMOVE_LIQUIDITY` | 流動性削除 |
-| `NFT_PURCHASE` | NFT 購入 |
-| `AIRDROP` | エアドロップ |
-| `CONTRACT_INTERACTION` | その他コントラクト操作 (approve 等) |
-| `UNKNOWN` | 不明 |
+SEND
+RECEIVE
+SWAP
+STAKE
+UNSTAKE
+REWARD
+ADD_LIQUIDITY
+REMOVE_LIQUIDITY
+NFT_PURCHASE
+AIRDROP
+CONTRACT_INTERACTION
+UNKNOWN
 
 ## ファイル構成
 
-```
 cripto/
-├── wallet_tracker.py        ← メインプログラム
-├── fetchers/
-│   ├── evm_fetcher.py       ← EVM 共通基底クラス
-│   ├── base_fetcher.py      ← Base チェーン
-│   ├── polygon_fetcher.py   ← Polygon
-│   ├── avalanche_fetcher.py ← Avalanche
-│   └── bitcoin_fetcher.py   ← Bitcoin (Blockstream API)
-├── classifiers/
-│   └── tx_classifier.py     ← 取引タイプ分類
-├── exporters/
-│   └── csv_exporter.py      ← CSV 出力
-├── output/                  ← 生成された CSV (自動作成)
-├── logs/                    ← ログファイル (自動作成)
-├── requirements.txt
-├── .env.example
-└── .gitignore
-```
+
+wallet_tracker.py
+メインプログラム
+
+fetchers/
+
+evm_fetcher.py
+base_fetcher.py
+polygon_fetcher.py
+avalanche_fetcher.py
+bitcoin_fetcher.py
+
+classifiers/
+tx_classifier.py
+
+exporters/
+csv_exporter.py
+
+output/
+生成CSV
+
+logs/
+ログ
+
+requirements.txt
+
+.env.example
+
+.gitignore
 
 ## 注意事項
 
-- EVM 系 API は 1 リクエストあたり最大 10,000 件の制限があります。  
-  10,000 件を超える場合は自動的にページネーションします。
-- APIキーの無料プランはレート制限があります（通常 5 calls/sec 以内）。  
-  このツールは自動的に待機時間を入れています。
-- `.env` ファイルは **絶対に Git にコミットしない** でください（`.gitignore` で除外済み）。
+EVM API は 1リクエスト最大 10000件の制限があります。
+
+件数が多い場合はページネーションで自動取得します。
+
+Etherscan API の無料プランは
+
+5 requests / sec
+
+程度の制限があります。
+
+このツールはレート制限を考慮し待機時間を入れています。
+
+.env ファイルは 絶対に Git にコミットしないでください。
+
+.gitignore により除外されています.
